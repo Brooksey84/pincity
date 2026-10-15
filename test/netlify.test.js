@@ -1,30 +1,38 @@
-// The Express app behind serverless-http, called the way Netlify calls the function.
+// The Express app behind the Netlify Function adapter, called with Web Requests the way Netlify does.
 const test = require('node:test');
 const assert = require('node:assert');
-const serverless = require('serverless-http');
 const { open } = require('../lib/db');
 const { ensureAdmin } = require('../lib/auth');
 const { createApp } = require('../lib/app');
+const { toWebHandler } = require('../lib/web-handler');
 
-test('works as a Netlify function, under either path', async (t) => {
+test('works as a Netlify Function', async (t) => {
   const db = await open();
   t.after(() => db.close());
   await ensureAdmin(db, 'admin@test', 'adminpass');
-  const handler = serverless(createApp(db, { secureCookies: true }));
-  const call = (path, extra = {}) => handler({ path, httpMethod: 'GET', headers: {}, queryStringParameters: null, body: null, isBase64Encoded: false, ...extra }, {});
+  const handle = toWebHandler(createApp(db, { secureCookies: true }));
+  const call = (path, init) => handle(new Request(`https://pincity.netlify.app${path}`, init));
 
   const cats = await call('/api/categories');
-  assert.strictEqual(cats.statusCode, 200);
-  assert.strictEqual(JSON.parse(cats.body).length, 2);
-  assert.strictEqual((await call('/.netlify/functions/api/categories')).statusCode, 200);
+  assert.strictEqual(cats.status, 200);
+  assert.strictEqual((await cats.json()).length, 2);
 
   const login = await call('/api/auth/login', {
-    httpMethod: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'admin@test', password: 'adminpass' }),
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'admin@test', password: 'adminpass' }),
   });
-  assert.strictEqual(login.statusCode, 200);
-  const cookie = (login.multiValueHeaders?.['set-cookie'] || [login.headers['set-cookie']])[0];
+  assert.strictEqual(login.status, 200);
+  const cookie = login.headers.getSetCookie()[0];
   assert.match(cookie, /HttpOnly.*Secure/);
   const stats = await call('/api/admin/stats', { headers: { cookie: cookie.split(';')[0] } });
-  assert.strictEqual(stats.statusCode, 200);
-  assert.strictEqual(JSON.parse(stats.body).cities, 0);
+  assert.strictEqual(stats.status, 200);
+  assert.strictEqual((await stats.json()).cities, 0);
+
+  const city = await call('/api/admin/cities', {
+    method: 'POST', headers: { 'content-type': 'application/json', cookie: cookie.split(';')[0] },
+    body: JSON.stringify({ name: 'Lisbon', lat: 38.7, lng: -9.1, published: true }),
+  });
+  assert.strictEqual(city.status, 200);
+  const kml = await call('/api/cities/lisbon/export.kml?categories=food');
+  assert.match(kml.headers.get('content-type'), /kml/);
+  assert.match(await kml.text(), /Pin City · Lisbon/);
 });
