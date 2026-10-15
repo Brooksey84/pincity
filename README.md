@@ -59,7 +59,7 @@ This page needs `GOOGLE_MAPS_API_KEY`, with the **Maps JavaScript API** and **Pl
 
 ## Importing your Google Maps lists
 
-Admin › Import list. Pick the city and category, upload a file, preview it, untick anything you don't want, and import. Places already in that city (same Google link, place id or name) are skipped, so re-importing an updated list is safe.
+Admin › Import list. Pick the city (and a category if the whole list is one kind of place), upload a file, preview it, untick anything you don't want, and import. Places already in that city (same Google link, place id or name) are skipped, so re-importing an updated list is safe.
 
 | Source | How to get it | Coordinates? |
 |---|---|---|
@@ -75,7 +75,7 @@ Import notes from the list (the Note/Comment columns) become the place's team no
 ## Data model
 
 - **cities**: name, country, map centre and zoom, live/hidden
-- **categories**: Restaurants and Bars are live; Museums, Nightclubs and Kid-friendly are set up and can be switched on in the admin
+- **categories**: Restaurants, Bars, Cafes, Bakeries, Delicatessens, Bottle shops, Wine merchants, Tobacconists, Bicycle shops, Cinemas, Theatres and Music venues are live (users are only offered the ones with pins in that city); Museums, Nightclubs and Kid-friendly are set up and can be switched on in the admin
 - **places**: city, category, location, Google link/place id, team note, *team reviewed* flag, visit date, status (`published`, `draft`, `needs_location`)
 - **users / sessions**: email + password (scrypt), 30-day sessions
 - **subscriptions**: user × city × category

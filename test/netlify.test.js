@@ -15,7 +15,7 @@ test('works as a Netlify Function', async (t) => {
 
   const cats = await call('/api/categories');
   assert.strictEqual(cats.status, 200);
-  assert.strictEqual((await cats.json()).length, 2);
+  assert.strictEqual((await cats.json()).length, 12);
 
   const login = await call('/api/auth/login', {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'admin@test', password: 'adminpass' }),

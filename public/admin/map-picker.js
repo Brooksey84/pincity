@@ -20,10 +20,24 @@ function loadGoogleMaps(key) {
 function guessCategory(types = []) {
   const has = (...t) => t.some((x) => types.includes(x));
   const bySlug = (slug) => state.categories.find((c) => c.slug === slug);
-  if (has('bar', 'pub', 'wine_bar', 'cocktail_bar')) return bySlug('drink');
-  if (has('night_club')) return bySlug('nightlife') || bySlug('drink');
-  if (has('museum', 'art_gallery')) return bySlug('museums');
-  if (has('restaurant', 'cafe', 'bakery', 'meal_takeaway', 'food')) return bySlug('food');
+  // Most specific first: a cafe is also a "restaurant" and a "food" place to Google.
+  const rules = [
+    [['bicycle_store'], 'bicycle-shops'],
+    [['tobacco_shop'], 'tobacconists'],
+    [['movie_theater'], 'cinemas'],
+    [['performing_arts_theater'], 'theatres'],
+    [['live_music_venue', 'concert_hall', 'amphitheatre'], 'music-venues'],
+    [['wine_store'], 'wine-merchants'],
+    [['liquor_store'], 'bottle-shops'],
+    [['deli'], 'delicatessens'],
+    [['bakery'], 'bakeries'],
+    [['cafe', 'coffee_shop', 'tea_house'], 'cafes'],
+    [['night_club'], 'nightlife'],
+    [['bar', 'pub', 'wine_bar', 'cocktail_bar'], 'drink'],
+    [['museum', 'art_gallery'], 'museums'],
+    [['restaurant', 'meal_takeaway', 'food'], 'food'],
+  ];
+  for (const [t, slug] of rules) if (has(...t) && bySlug(slug)) return bySlug(slug);
   return null;
 }
 

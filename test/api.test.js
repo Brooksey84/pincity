@@ -75,6 +75,23 @@ test('admin builds a city, user subscribes and downloads pins', async (t) => {
   assert.strictEqual((await admin('POST', '/api/admin/places', picked)).status, 200);
   assert.strictEqual((await admin('POST', '/api/admin/places', picked)).status, 409);
 
+  // Mixed import with no category: drafts with no category, which can't be published until one is set.
+  const mixed = (await admin('POST', '/api/admin/import/commit', {
+    city_id: city.id, items: [{ name: 'Cafe A', lat: 51.51, lng: -0.12 }, { name: 'Deli B', lat: 51.52, lng: -0.13 }], publish: true,
+  })).data;
+  assert.strictEqual(mixed.added, 2);
+  const uncategorised = (await admin('GET', `/api/admin/places?city_id=${city.id}&category_id=none`)).data;
+  assert.deepStrictEqual(uncategorised.map((p) => [p.name, p.status]), [['Cafe A', 'draft'], ['Deli B', 'draft']]);
+  assert.strictEqual((await admin('PATCH', `/api/admin/places/${uncategorised[0].id}`, { status: 'published' })).status, 400);
+  const tried = (await admin('POST', '/api/admin/places/bulk', { ids: uncategorised.map((p) => p.id), status: 'published' })).data;
+  assert.deepStrictEqual(tried, { updated: 0, skipped: 2 });
+  const cafes = cats.find((c) => c.slug === 'cafes');
+  assert.ok(cafes && cafes.active, 'new categories exist and are live');
+  await admin('POST', '/api/admin/places/bulk', { ids: [uncategorised[0].id], category_id: cafes.id });
+  assert.deepStrictEqual((await admin('POST', '/api/admin/places/bulk', { ids: uncategorised.map((p) => p.id), status: 'published' })).data, { updated: 1, skipped: 1 });
+  // Clear them out so the counts below stay about food and drink.
+  for (const p of uncategorised) await admin('DELETE', `/api/admin/places/${p.id}`);
+
   // Hidden city is invisible to the public.
   assert.strictEqual((await user('GET', '/api/cities')).data.length, 0);
   await admin('PATCH', `/api/admin/cities/${city.id}`, { published: true });

@@ -125,13 +125,15 @@ const views = {
     el.innerHTML = `<div class="toolbar"><h1 class="grow">Places</h1><button class="primary" id="add-place">Add place</button></div>
       <div class="toolbar">
         <select id="f-city">${options(state.cities, f.city_id, { blank: 'All cities' })}</select>
-        <select id="f-cat">${options(state.categories, f.category_id, { blank: 'All categories', label: (c) => `${c.icon} ${c.name}` })}</select>
+        <select id="f-cat">${options(state.categories, f.category_id, { blank: 'All categories', label: (c) => `${c.icon} ${c.name}` })}
+          <option value="none" ${f.category_id === 'none' ? 'selected' : ''}>No category yet</option></select>
         <select id="f-status"><option value="">Any status</option>${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}" ${f.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
         <input id="f-q" placeholder="Search name or address" value="${esc(f.q)}" class="grow">
       </div>
       <div id="map" class="map"></div>
       <div class="toolbar">
         <span class="help grow">${places.length} place(s). Tick some to change them together.</span>
+        <select id="bulk-cat" style="width:auto">${options(state.categories, '', { blank: 'Set category…', label: (c) => `${c.icon} ${c.name}` })}</select>
         <button data-bulk="published">Publish</button><button data-bulk="draft">Move to draft</button>
         <button data-bulk="reviewed">Mark team-reviewed</button>
       </div>
@@ -143,7 +145,7 @@ const views = {
             <td><input type="checkbox" class="sel" value="${p.id}" style="width:auto"></td>
             <td><b>${esc(p.name)}</b> ${p.team_reviewed ? '<span class="pill reviewed">Team reviewed</span>' : ''}
               <div class="sub">${esc(p.address)}</div>${p.team_note ? `<div class="sub">“${esc(p.team_note.slice(0, 120))}”</div>` : ''}</td>
-            <td>${esc(c.icon)} ${esc(c.name)}</td>
+            <td>${c.name ? `${esc(c.icon)} ${esc(c.name)}` : '<span class="pill needs_location">No category</span>'}</td>
             <td>${esc(cityById(p.city_id)?.name)}</td>
             <td><span class="pill ${p.status}">${STATUS_LABEL[p.status]}</span></td>
             <td style="white-space:nowrap"><button class="link" data-edit="${p.id}">Edit</button> ·
@@ -158,6 +160,19 @@ const views = {
     $('#f-q').onkeydown = (e) => e.key === 'Enter' && go();
     $('#add-place').onclick = () => editPlace({ city_id: f.city_id, category_id: f.category_id });
     $('#all').onchange = (e) => el.querySelectorAll('.sel').forEach((cb) => (cb.checked = e.target.checked));
+    $('#bulk-cat').onchange = async (e) => {
+      const ids = [...el.querySelectorAll('.sel:checked')].map((cb) => Number(cb.value));
+      const category_id = Number(e.target.value);
+      e.target.value = '';
+      if (!category_id) return;
+      if (!ids.length) return toast('Tick some places first.');
+      try {
+        const r = await api('/admin/places/bulk', { method: 'POST', body: { ids, category_id } });
+        const c = catById(category_id);
+        toast(`${r.updated} moved to ${c.icon} ${c.name}`);
+        route();
+      } catch (err) { toast(err.message); }
+    };
 
     drawMap($('#map'), places, cityById(f.city_id));
 
@@ -176,7 +191,7 @@ const views = {
           const ids = [...el.querySelectorAll('.sel:checked')].map((cb) => Number(cb.value));
           const body = t.dataset.bulk === 'reviewed' ? { ids, team_reviewed: true } : { ids, status: t.dataset.bulk };
           const r = await api('/admin/places/bulk', { method: 'POST', body });
-          toast(`${r.updated} updated${r.skipped ? `, ${r.skipped} skipped (no location yet)` : ''}`);
+          toast(`${r.updated} updated${r.skipped ? `, ${r.skipped} skipped (they need a location and a category first)` : ''}`);
           route();
         }
       } catch (err) { toast(err.message); }
@@ -202,7 +217,7 @@ const views = {
         <div class="card">
           <div class="grid2">
             <label>Add to city <select id="i-city">${options(state.cities, '', { blank: 'Choose a city' })}</select></label>
-            <label>Category <select id="i-cat">${options(state.categories, '', { blank: 'Choose a category', label: (c) => `${c.icon} ${c.name}${c.active ? '' : ' (not live yet)'}` })}</select></label>
+            <label>Category (optional) <select id="i-cat">${options(state.categories, '', { blank: 'Mixed: I’ll set them while reviewing', label: (c) => `All ${c.icon} ${c.name}${c.active ? '' : ' (not live yet)'}` })}</select></label>
           </div>
           <label>Link to a shared Google Maps list <input id="i-list" placeholder="https://maps.app.goo.gl/…"></label>
           <button class="primary" id="i-fetch">Fetch list</button>
@@ -252,7 +267,7 @@ const views = {
             <td class="sub">${i.lat != null ? `${i.lat.toFixed(5)}, ${i.lng.toFixed(5)}` : '<span class="pill needs_location">missing</span>'}</td></tr>`).join('')}</tbody></table></div>
         <p></p>
         <label class="check"><input type="checkbox" id="p-reviewed"> Mark all as reviewed by the Pin City team</label>
-        <label class="check"><input type="checkbox" id="p-publish"> Publish straight away (otherwise they go in as drafts)</label>
+        <label class="check"><input type="checkbox" id="p-publish"> Publish straight away (only if you chose one category above; otherwise they go in as drafts)</label>
         <button class="primary" id="p-commit">Import selected</button>
       </div>`;
       $('#p-all').onchange = (e) => document.querySelectorAll('.p-sel').forEach((cb) => (cb.checked = e.target.checked));
@@ -262,7 +277,7 @@ const views = {
     async function commit() {
       const city_id = $('#i-city').value;
       const category_id = $('#i-cat').value;
-      if (!city_id || !category_id) return toast('Choose a city and a category first.');
+      if (!city_id) return toast('Choose a city first.');
       const items = [...document.querySelectorAll('.p-sel:checked')].map((cb) => preview.items[cb.dataset.n]);
       $('#p-commit').disabled = true;
       $('#p-commit').textContent = 'Importing…';
@@ -273,7 +288,7 @@ const views = {
           $('#p-commit').textContent = `Importing ${Math.min(i + 25, items.length)} of ${items.length}…`;
           const part = await api('/admin/import/commit', {
             method: 'POST',
-            body: { city_id: Number(city_id), category_id: Number(category_id), items: items.slice(i, i + 25), team_reviewed: $('#p-reviewed').checked, publish: $('#p-publish').checked },
+            body: { city_id: Number(city_id), category_id: Number(category_id) || null, items: items.slice(i, i + 25), team_reviewed: $('#p-reviewed').checked, publish: $('#p-publish').checked },
           });
           for (const k of ['added', 'duplicates', 'located', 'needs_location']) r[k] += part[k];
           r.geocode_errors.push(...part.geocode_errors);
@@ -283,7 +298,8 @@ const views = {
           <li>${r.duplicates} skipped as already in this city</li>
           ${r.needs_location ? `<li>${r.needs_location} need a location: <a href="#places?city_id=${city_id}&status=needs_location">fix them</a></li>` : ''}
           ${r.geocode_errors.map((e) => `<li class="error">${esc(e)}</li>`).join('')}
-        </ul><a href="#places?city_id=${city_id}&category_id=${category_id}">Review the imported places</a></div>`;
+          ${category_id ? '' : '<li>They came in as drafts without a category. Tick them on the Places page and use <i>Set category…</i>, then <i>Publish</i>.</li>'}
+        </ul><a href="#places?city_id=${city_id}&category_id=${category_id || 'none'}">Review the imported places</a></div>`;
       } catch (err) {
         toast(err.message);
         $('#p-commit').disabled = false;
@@ -352,7 +368,7 @@ async function editPlace(place = {}) {
     <label>Name <input name="name" required value="${esc(place.name)}"></label>
     <div class="grid2">
       <label>City <select name="city_id" required>${options(state.cities, place.city_id, { blank: 'Choose' })}</select></label>
-      <label>Category <select name="category_id" required>${options(state.categories, place.category_id, { blank: 'Choose', label: (c) => `${c.icon} ${c.name}` })}</select></label>
+      <label>Category <select name="category_id">${options(state.categories, place.category_id, { blank: 'Choose later', label: (c) => `${c.icon} ${c.name}` })}</select></label>
     </div>
     <label>Location: "lat, lng" or a Google Maps link with coordinates
       <input name="location_input" placeholder="${place.lat != null ? `${place.lat}, ${place.lng}` : 'Right-click the spot in Google Maps and copy the coordinates'}"></label>
@@ -368,7 +384,7 @@ async function editPlace(place = {}) {
     </div>
     <label class="check"><input type="checkbox" name="team_reviewed" ${place.team_reviewed ? 'checked' : ''}> Reviewed in person by the Pin City team</label>`);
   if (!v) return;
-  const body = { ...v, city_id: Number(v.city_id), category_id: Number(v.category_id), visited_on: v.visited_on || null };
+  const body = { ...v, city_id: Number(v.city_id), category_id: Number(v.category_id) || null, visited_on: v.visited_on || null };
   // If someone just added coordinates to a place waiting on them, let the server move it to draft.
   if (v.status === 'needs_location' && v.location_input) delete body.status;
   try {

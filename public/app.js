@@ -166,10 +166,13 @@ async function chooseCategories(slug) {
   }
   const city = state.cities.find((c) => c.slug === slug);
   const sub = subFor(slug);
-  const picked = new Set(sub ? sub.categories : state.categories.map((c) => c.slug));
+  // Only offer categories that have pins in this city (plus any already chosen).
+  const offered = state.categories.filter((c) => city.counts?.[c.slug] || sub?.categories.includes(c.slug));
+  const picked = new Set(sub ? sub.categories : offered.map((c) => c.slug));
   openDialog(`<h3>${esc(city.name)}: what do you want pinned?</h3>
     <form id="cat-form">
-      ${state.categories.map((c) => `<label class="cat-opt"><input type="checkbox" name="cat" value="${c.slug}" ${picked.has(c.slug) ? 'checked' : ''}>
+      ${offered.length ? '' : '<p class="note">No pins here yet. Check back soon.</p>'}
+      ${offered.map((c) => `<label class="cat-opt"><input type="checkbox" name="cat" value="${c.slug}" ${picked.has(c.slug) ? 'checked' : ''}>
         <span>${c.icon} ${esc(c.name)}</span><span class="note" style="margin-left:auto">${city.counts?.[c.slug] ?? 0}</span></label>`).join('')}
       <p class="error" id="cat-error"></p>
       <div class="row">
