@@ -189,6 +189,8 @@ const views = {
       <div class="steps">
         <div class="card help">
           <h3>Getting a list out of Google Maps</h3>
+          <p><b>Quickest: a list link.</b> In Google Maps, open the list, tap <b>Share</b> (turn on link sharing if asked) and copy the link.
+            Paste it below and press <i>Fetch list</i>. Google doesn't officially support this, so if it stops working, use Takeout below.</p>
           <p><b>Saved lists</b> (your "Want to go", "Favourites" or any list you've made): go to
             <a href="https://takeout.google.com" target="_blank" rel="noopener">Google Takeout</a>, choose only <b>Saved</b>, export,
             and upload the list's <code>.csv</code> file here. Takeout lists don't include coordinates, so each place is looked up
@@ -202,6 +204,9 @@ const views = {
             <label>Add to city <select id="i-city">${options(state.cities, '', { blank: 'Choose a city' })}</select></label>
             <label>Category <select id="i-cat">${options(state.categories, '', { blank: 'Choose a category', label: (c) => `${c.icon} ${c.name}${c.active ? '' : ' (not live yet)'}` })}</select></label>
           </div>
+          <label>Link to a shared Google Maps list <input id="i-list" placeholder="https://maps.app.goo.gl/…"></label>
+          <button class="primary" id="i-fetch">Fetch list</button>
+          <p class="help">Or upload an export instead:</p>
           <label>File (.csv, .json or .kml) <input type="file" id="i-file" accept=".csv,.json,.geojson,.kml,.txt"></label>
           <label>…or paste links / file contents <textarea id="i-text" placeholder="https://maps.app.goo.gl/… or https://www.google.com/maps/place/…"></textarea></label>
           <button class="primary" id="i-preview">Preview</button>
@@ -211,6 +216,15 @@ const views = {
     if (!state.cities.length) $('#i-result').innerHTML = '<p class="help">Add a city first under <a href="#cities">Cities</a>.</p>';
 
     let preview = null;
+    $('#i-fetch').onclick = async () => {
+      const btn = $('#i-fetch');
+      btn.disabled = true;
+      btn.textContent = 'Fetching…';
+      try {
+        preview = await api('/admin/import/google-list', { method: 'POST', body: { url: $('#i-list').value } });
+        renderPreview();
+      } catch (err) { toast(err.message); } finally { btn.disabled = false; btn.textContent = 'Fetch list'; }
+    };
     $('#i-preview').onclick = async () => {
       try {
         const file = $('#i-file').files[0];
@@ -224,7 +238,7 @@ const views = {
       const located = preview.items.filter((i) => i.lat != null).length;
       const missing = preview.items.length - located;
       $('#i-result').innerHTML = `<div class="card">
-        <h3>Found ${preview.items.length} place(s) <span class="pill">${preview.format.toUpperCase()}</span></h3>
+        <h3>Found ${preview.items.length} place(s)${preview.title ? ` in “${esc(preview.title)}”` : ''} <span class="pill">${preview.format === 'google-list' ? 'GOOGLE LIST' : preview.format.toUpperCase()}</span></h3>
         <p class="help">${located} have coordinates.
           ${missing ? (preview.geocoding_available
             ? `${missing} will be looked up with the Places API when you import.`

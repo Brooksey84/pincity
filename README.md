@@ -57,12 +57,12 @@ Admin › Import list. Pick the city and category, upload a file, preview it, un
 
 | Source | How to get it | Coordinates? |
 |---|---|---|
+| A shared list link (quickest) | Google Maps › open the list › **Share** › copy link, then paste it and press *Fetch list* | Yes. Uses Google's unofficial list endpoint, so it may stop working without notice; Takeout is the fallback |
 | Saved lists ("Want to go", "Favourites", your own lists) | [Google Takeout](https://takeout.google.com) › select only **Saved** › one `.csv` per list | No. Looked up with the Places API, or flagged *Needs location* |
 | Starred places | Takeout › **Maps (your places)** › `Saved Places.json` | Yes |
 | Google My Maps | Map menu › *Export to KML/KMZ* › tick "Export to a .KML file" | Yes |
 | Individual places | Paste Google Maps links, one per line | Only if the link contains them |
 
-Shared list links (`maps.app.goo.gl/...`) can't be read directly because Google doesn't offer an API for lists. Use Takeout for those.
 
 Import notes from the list (the Note/Comment columns) become the place's team note. You can also tick **Mark all as reviewed by the Pin City team** and **Publish straight away**.
 
