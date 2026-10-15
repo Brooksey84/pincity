@@ -70,6 +70,11 @@ test('admin builds a city, user subscribes and downloads pins', async (t) => {
   })).data;
   assert.strictEqual(bar.lat, 51.52);
 
+  // Added from the map picker (has a Google place id); adding it again is refused.
+  const picked = { city_id: city.id, category_id: drink.id, name: 'Picked Bar', lat: 51.5, lng: -0.1, google_place_id: 'ChIJpicked', status: 'draft' };
+  assert.strictEqual((await admin('POST', '/api/admin/places', picked)).status, 200);
+  assert.strictEqual((await admin('POST', '/api/admin/places', picked)).status, 409);
+
   // Hidden city is invisible to the public.
   assert.strictEqual((await user('GET', '/api/cities')).data.length, 0);
   await admin('PATCH', `/api/admin/cities/${city.id}`, { published: true });

@@ -37,7 +37,7 @@ The admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD` is created (or promoted 
 
 | Variable | What it does | Without it |
 |---|---|---|
-| `GOOGLE_MAPS_API_KEY` | Browser key for the Maps JavaScript API. The user app draws Google's map. | The app uses OpenStreetMap tiles. Everything else works the same. |
+| `GOOGLE_MAPS_API_KEY` | Browser key with the Maps JavaScript API and Places API (New) enabled. The user app draws Google's map, and the admin's **Add from map** page works. | The app uses OpenStreetMap tiles and *Add from map* is unavailable. Everything else works the same. |
 | `GOOGLE_PLACES_API_KEY` | Server key for the Places API (New). Imports look up coordinates, address and website for list items that arrive without them. | Those items are saved as **Needs location** and an admin pastes coordinates or a Google Maps link. |
 
 Restrict the browser key to your domain in Google Cloud Console.
@@ -50,6 +50,12 @@ Google doesn't let other apps draw pins inside the Google Maps app, so Pin City 
 2. **Add to Google Maps.** For subscribed cities, users can download a `.kml` file of their pins and import it once into [Google My Maps](https://www.google.com/maps/d/). That map then appears in the Google Maps app under *You › Maps*. It's a snapshot, so it doesn't update when the team adds places.
 
 If you later want pins that update live inside a native app, the same API can feed a React Native / Expo app using the Google Maps SDK.
+
+## Adding places from the map
+
+Admin › **Add from map** shows a Google map of the city. Tap any business (or search for one), pick a category, add your team note, and press **Add**. It's saved with Google's place id, so **Directions** in the app open that exact business, and the same place can't be added to a city twice. Dots show places already in Pin City.
+
+This page needs `GOOGLE_MAPS_API_KEY`, with the **Maps JavaScript API** and **Places API (New)** enabled on that key.
 
 ## Importing your Google Maps lists
 
