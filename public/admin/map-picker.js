@@ -29,14 +29,16 @@ function guessCategory(types = []) {
     [['live_music_venue', 'concert_hall', 'amphitheatre'], 'music-venues'],
     [['wine_store'], 'wine-merchants'],
     [['liquor_store'], 'bottle-shops'],
-    [['deli'], 'delicatessens'],
+    [['deli', 'butcher_shop'], 'delicatessens'],
     [['bakery'], 'bakeries'],
     [['cafe', 'coffee_shop', 'tea_house'], 'cafes'],
     [['night_club'], 'nightlife'],
     [['pub'], 'pubs'],
     [['bar', 'wine_bar', 'cocktail_bar'], 'drink'],
     [['museum', 'art_gallery'], 'museums'],
-    [['restaurant', 'meal_takeaway', 'food'], 'food'],
+    [['meal_takeaway', 'meal_delivery'], 'takeaway'],
+    [['food_court'], 'street-food'],
+    [['restaurant', 'food'], 'food'],
   ];
   for (const [t, slug] of rules) if (has(...t) && bySlug(slug)) return bySlug(slug);
   return null;
