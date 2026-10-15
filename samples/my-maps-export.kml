@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>London drinks</name>
+    <Folder>
+      <name>Bars</name>
+      <Placemark>
+        <name>The Connaught Bar</name>
+        <description><![CDATA[Martini trolley.<br>https://www.google.com/maps/place/The+Connaught+Bar/]]></description>
+        <Point><coordinates>-0.1497,51.5101,0</coordinates></Point>
+      </Placemark>
+      <Placemark>
+        <name>Satan&apos;s Whiskers</name>
+        <description>Daily-changing cocktail list</description>
+        <Point><coordinates>
+          -0.0565,51.5293,0
+        </coordinates></Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

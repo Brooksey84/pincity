@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pin City Admin</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div id="login" class="login hidden">
+    <form id="login-form" class="card">
+      <h1>📍 Pin City Admin</h1>
+      <label>Email <input name="email" type="email" required autocomplete="username"></label>
+      <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+      <button class="primary">Sign in</button>
+      <p class="error" id="login-error"></p>
+    </form>
+  </div>
+
+  <div id="shell" class="shell hidden">
+    <aside>
+      <div class="brand">📍 Pin City <span>admin</span></div>
+      <nav>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#cities">Cities</a>
+        <a href="#places">Places</a>
+        <a href="#import">Import list</a>
+        <a href="#categories">Categories</a>
+      </nav>
+      <div class="who"><span id="who"></span><button id="logout" class="link">Sign out</button></div>
+    </aside>
+    <main id="view"></main>
+  </div>
+
+  <dialog id="dialog"><form method="dialog" id="dialog-form"></form></dialog>
+  <div id="toast"></div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

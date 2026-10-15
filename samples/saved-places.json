@@ -1,0 +1,4 @@
+{"type":"FeatureCollection","features":[
+ {"geometry":{"coordinates":[-0.1268,51.5124],"type":"Point"},"properties":{"date":"2024-05-01T10:00:00Z","google_maps_url":"http://maps.google.com/?cid=1234567890","location":{"address":"12 Upper St Martin's Ln, London WC2H 9FB","country_code":"GB","name":"Dishoom Covent Garden"}},"type":"Feature"},
+ {"geometry":{"coordinates":[0,0],"type":"Point"},"properties":{"google_maps_url":"http://maps.google.com/?q=Somewhere","Comment":"No coords"},"type":"Feature"}
+]}
