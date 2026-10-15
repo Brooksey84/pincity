@@ -75,7 +75,7 @@ Import notes from the list (the Note/Comment columns) become the place's team no
 ## Data model
 
 - **cities**: name, country, map centre and zoom, live/hidden
-- **categories**: Restaurants, Bars, Cafes, Bakeries, Delicatessens, Bottle shops, Wine merchants, Tobacconists, Bicycle shops, Cinemas, Theatres and Music venues are live (users are only offered the ones with pins in that city); Museums, Nightclubs and Kid-friendly are set up and can be switched on in the admin
+- **categories**: Restaurants, Bars, Pubs, Cafes, Bakeries, Delicatessens, Bottle shops, Wine merchants, Tobacconists, Bicycle shops, Cinemas, Theatres and Music venues are live (users are only offered the ones with pins in that city); Museums, Nightclubs and Kid-friendly are set up and can be switched on in the admin
 - **places**: city, category, location, Google link/place id, team note, *team reviewed* flag, visit date, status (`published`, `draft`, `needs_location`)
 - **users / sessions**: email + password (scrypt), 30-day sessions
 - **subscriptions**: user × city × category

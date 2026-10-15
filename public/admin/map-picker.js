@@ -33,7 +33,8 @@ function guessCategory(types = []) {
     [['bakery'], 'bakeries'],
     [['cafe', 'coffee_shop', 'tea_house'], 'cafes'],
     [['night_club'], 'nightlife'],
-    [['bar', 'pub', 'wine_bar', 'cocktail_bar'], 'drink'],
+    [['pub'], 'pubs'],
+    [['bar', 'wine_bar', 'cocktail_bar'], 'drink'],
     [['museum', 'art_gallery'], 'museums'],
     [['restaurant', 'meal_takeaway', 'food'], 'food'],
   ];
